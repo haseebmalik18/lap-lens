@@ -15,6 +15,8 @@ export interface LapMetadata {
 export class LapRecorder {
   private currentLapData: NormalizedTelemetryPoint[] = [];
   private currentLapNumber: number = 0;
+  private baseLapNumber: number | null = null;
+  private relativeLapNumber: number = 0;
   private outputDir: string;
 
   constructor(outputDir: string = './laps') {
@@ -25,11 +27,16 @@ export class LapRecorder {
   }
 
   addTelemetryPoint(point: NormalizedTelemetryPoint) {
+    if (this.baseLapNumber === null) {
+      this.baseLapNumber = point.lapNum;
+    }
+
     if (point.lapNum !== this.currentLapNumber) {
       if (this.currentLapData.length > 0 && this.currentLapNumber > 0) {
         this.saveLap();
       }
       this.currentLapNumber = point.lapNum;
+      this.relativeLapNumber = point.lapNum - this.baseLapNumber + 1;
       this.currentLapData = [];
     }
     this.currentLapData.push(point);
@@ -39,7 +46,7 @@ export class LapRecorder {
     if (this.currentLapData.length === 0) return;
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const baseName = `lap_${this.currentLapNumber}_${timestamp}`;
+    const baseName = `lap_${this.relativeLapNumber}_${timestamp}`;
 
     const csvPath = path.join(this.outputDir, `${baseName}.csv`);
     const jsonPath = path.join(this.outputDir, `${baseName}.json`);
@@ -52,7 +59,7 @@ export class LapRecorder {
     fs.writeFileSync(csvPath, csvHeader + csvRows);
 
     const metadata: LapMetadata = {
-      lapNumber: this.currentLapNumber,
+      lapNumber: this.relativeLapNumber,
       trackName: 'Unknown',
       carName: 'Unknown',
       timestamp: new Date().toISOString(),
@@ -63,7 +70,7 @@ export class LapRecorder {
 
     fs.writeFileSync(jsonPath, JSON.stringify(metadata, null, 2));
 
-    console.log(`Lap ${this.currentLapNumber} saved: ${this.currentLapData.length} points`);
+    console.log(`Lap ${this.relativeLapNumber} saved: ${this.currentLapData.length} points`);
   }
 
   getCurrentLapNumber(): number {
