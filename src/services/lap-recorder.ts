@@ -16,7 +16,6 @@ export class LapRecorder {
   private currentLapData: NormalizedTelemetryPoint[] = [];
   private currentLapNumber: number = 0;
   private baseLapNumber: number | null = null;
-  private relativeLapNumber: number = 0;
   private outputDir: string;
 
   constructor(outputDir: string = './laps') {
@@ -36,7 +35,6 @@ export class LapRecorder {
         this.saveLap();
       }
       this.currentLapNumber = point.lapNum;
-      this.relativeLapNumber = point.lapNum - this.baseLapNumber + 1;
       this.currentLapData = [];
     }
     this.currentLapData.push(point);
