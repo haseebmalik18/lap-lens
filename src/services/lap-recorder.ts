@@ -26,9 +26,11 @@ export class LapRecorder {
   }
 
   addTelemetryPoint(point: NormalizedTelemetryPoint) {
-    if (this.baseLapNumber === null) {
+    if (this.baseLapNumber === null && point.lapNum > 0) {
       this.baseLapNumber = point.lapNum;
     }
+
+    if (this.baseLapNumber === null) return;
 
     if (point.lapNum !== this.currentLapNumber) {
       if (this.currentLapData.length > 0 && this.currentLapNumber > 0) {
